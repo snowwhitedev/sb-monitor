@@ -31,26 +31,28 @@ function App() {
     currentFetching[pool] = true;
 
     setFetching({ ...currentFetching });
-    try {
-      let result = await stakingClient.query({
-        query: STAKE_POISITION,
-        variables: {
-          skip: 0,
-          pool: pool
-        },
-        fetchPolicy: 'cache-first'
-      });
-
-      allResults = [...allResults, ...result.data.stakePositions]
-      if (result.data.stakePositions.length < PAGE_ITEMS) {
-        found = true;
-      } else {
-        skip += PAGE_ITEMS;
+    while (found === false) {
+      try {
+        let result = await stakingClient.query({
+          query: STAKE_POISITION,
+          variables: {
+            skip: skip,
+            pool: pool
+          },
+          fetchPolicy: 'cache-first'
+        });
+  
+        allResults = [...allResults, ...result.data.stakePositions]
+        if (result.data.stakePositions.length < PAGE_ITEMS) {
+          found = true;
+        } else {
+          skip += PAGE_ITEMS;
+        }
+      } catch (e) {
+        console.log('error ==>', e);
       }
-    } catch (e) {
-      console.log('error ==>', e);
     }
-
+    
     downloadJSON(allResults, FILE_NAMES[pool]);
     currentFetching[pool] = false;
     setFetching({ ...currentFetching });
